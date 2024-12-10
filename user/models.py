@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 import uuid
+from django.apps import apps
+# from student.models import Student
 
 class User(AbstractUser):
     class Types(models.TextChoices):
@@ -17,6 +19,18 @@ class User(AbstractUser):
     
     class Meta:
         db_table = 'users'
+        
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            super().save(*args, **kwargs) 
+            if self.user_type == self.Types.STUDENT:
+                Student = apps.get_model('student', 'Student')
+                Student.objects.create(user=self, student_name=self.username)
+            elif self.user_type == self.Types.TEACHER:
+                Teacher = apps.get_model('teacher', 'Teacher')
+                Teacher.objects.create(user=self, teacher_name=self.username)
+        else:
+            super().save(*args, **kwargs)
 
 class VerificationToken(models.Model):
     user = models.ForeignKey(User, related_name='verification_tokens', on_delete=models.CASCADE)
@@ -28,7 +42,8 @@ class VerificationToken(models.Model):
         return timezone.now() > self.expires_at
 
     def __str__(self):
-        return f"{self.user.username}"
+        # return f"{self.user.username}"
+        return {self.user.username}
     
     class Meta:
         db_table = 'tokens'

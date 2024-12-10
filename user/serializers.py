@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import User
-from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+# from django.contrib.auth.password_validation import validate_password
+# from django.core.exceptions import ValidationError
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
@@ -18,9 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-    def validate_password(self, value):
-        try:
-            validate_password(value)
-        except ValidationError as e:
-            raise serializers.ValidationError(e.messages)
-        return value
+    # def validate_password(self, value):
+    #     try:
+    #         validate_password(value)
+    #     except ValidationError as e:
+    #         raise serializers.ValidationError(e.messages)
+    #     return value

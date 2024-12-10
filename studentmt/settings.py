@@ -26,8 +26,6 @@ SECRET_KEY = 'django-insecure-au_2req7j(z-w44-rjnvjww*5waa&q)12jd!bx=*$k_9o3y6&1
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,6 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user',
+    'student',
+    'teacher',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
