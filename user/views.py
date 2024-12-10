@@ -8,11 +8,12 @@ from rest_framework.views import APIView
 from .models import User
 from .models import VerificationToken
 from .serializers import UserSerializer
-from django.contrib.sites.shortcuts import get_current_site
+# from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
-from django.contrib.auth.tokens import default_token_generator
+# from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 import uuid
+from .permissions import IsAdministration
 
 class RegisterApi(APIView):
     def post(self, request):
@@ -64,9 +65,10 @@ class VerifyEmailApi(APIView):
         
 class RequestPasswordResetApi(APIView):
     def post(self, request):
-        email = request.data.get('email')
+        username = request.data.get('username')
         try:
-            user = User.objects.filter(email=email).last()
+            user = User.objects.get(username=username)
+            print(user)
         except User.DoesNotExist:
             return Response({"error": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
         token = uuid.uuid4()
@@ -106,3 +108,33 @@ class ResetPasswordApi(APIView):
         user.save()
         token_obj.delete()
         return Response({"message": "Password has been reset successfully!"}, status=status.HTTP_200_OK)
+
+
+# class UserListApi(APIView):
+#     def get(self, request):
+#         user = User.objects.all()
+#         serializer = UserSerializer(user, many=True)
+#         return Response(serializer.data)
+
+# class UserDetailGetApi(APIView):
+#     def get(self, request, pk):
+#         user= get_object_or_404(User, pk=pk)
+#         serializer = UserSerializer(user)
+#         return Response(serializer.data)
+
+# class UserDetailUpdateApi(APIView):
+#     permission_classes= [IsAdministration]
+#     def post(self, request, pk):
+#         user= get_object_or_404(User, pk=pk)
+#         serializer = UserSerializer(user, data = request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class UserDetailDeleteApi(APIView):
+#     permission_classes = [IsAdministration]
+#     def delete(self, request, pk):
+#         user= get_object_or_404(User, pk=pk)
+#         user.delete()
+#         return Response(status = status.HTTP_204_NO_CONTENT)
