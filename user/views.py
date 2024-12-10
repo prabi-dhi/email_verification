@@ -11,8 +11,10 @@ from .serializers import UserSerializer
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+import uuid
 
-class RegisterView(APIView):
+class RegisterApi(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -46,7 +48,7 @@ class RegisterView(APIView):
         )   
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message= message)
 
-class VerifyEmailView(APIView):
+class VerifyEmailApi(APIView):
     def get(self, request, token):
         try:
             token_obj = VerificationToken.objects.filter(token=token).last()
@@ -59,3 +61,48 @@ class VerifyEmailView(APIView):
             return Response({'message': 'Email successfully verified!'}, status=status.HTTP_200_OK)
         except VerificationToken.DoesNotExist:
             return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class RequestPasswordResetApi(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.filter(email=email).last()
+        except User.DoesNotExist:
+            return Response({"error": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        token = uuid.uuid4()
+        # token = default_token_generator.make_token(user)
+        reset_token = VerificationToken.objects.create(user=user, token=token,
+            expires_at=timezone.now() + timedelta(hours=1)
+        )
+        self.send_password_reset_email(user, reset_token)
+        return Response({"message": "Check email to reset password"}, status=status.HTTP_200_OK)
+        
+    def send_password_reset_email(self, user, reset_token):
+        reset_url = f'http://127.0.0.1:8000/reset-password/{reset_token.token}/'
+        subject = 'Reset Your Password'
+        message = render_to_string(
+            'email/password_reset_email.html',
+            {
+                'user': user,
+                'reset_url': reset_url,
+            }
+        )
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+
+class ResetPasswordApi(APIView):
+    def post(self, request, token):
+        try:
+            token_obj = VerificationToken.objects.filter(token=token).last()
+        except VerificationToken.DoesNotExist:
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+        if token_obj.is_expired():
+            return Response({"error": "Token has expired"}, status=status.HTTP_400_BAD_REQUEST)
+        new_password = request.data.get('new_password')
+        if not new_password:
+            return Response({"error": "New password is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = token_obj.user
+        user.set_password(new_password)
+        user.save()
+        token_obj.delete()
+        return Response({"message": "Password has been reset successfully!"}, status=status.HTTP_200_OK)

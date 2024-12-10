@@ -33,7 +33,7 @@ class User(AbstractUser):
             super().save(*args, **kwargs)
 
 class VerificationToken(models.Model):
-    user = models.ForeignKey(User, related_name='verification_tokens', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -42,7 +42,6 @@ class VerificationToken(models.Model):
         return timezone.now() > self.expires_at
 
     def __str__(self):
-        # return f"{self.user.username}"
         return {self.user.username}
     
     class Meta:
