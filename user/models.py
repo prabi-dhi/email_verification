@@ -28,4 +28,7 @@ class VerificationToken(models.Model):
         return timezone.now() > self.expires_at
 
     def __str__(self):
-        return f"Token for {self.user.username}"
+        return f"{self.user.username}"
+    
+    class Meta:
+        db_table = 'tokens'

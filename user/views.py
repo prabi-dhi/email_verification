@@ -44,7 +44,7 @@ class RegisterView(APIView):
                 'verification_url': verification_url,
             }
         )   
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message= message)
 
 class VerifyEmailView(APIView):
     def get(self, request, token):
