@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {% comment %}
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Verification</title>
+  </head>
+  <body>
+    {% comment %}
+    <h1>Hi {{ user.username }}</h1>
+    {% endcomment %}
+    <p>
+      Thank you for registering! To verify email address please click the link
+      below:
+    </p>
+    <p><a href="{{ verification_url }}">Verify Email</a></p>
+    <p>If you did not register on this site, please ignore this email.</p>
+  </body>
+</html>
