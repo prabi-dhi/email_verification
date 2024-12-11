@@ -7,10 +7,17 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .permissions import IsAdministrationOrTeacher
 from .permissions import IsAdministration
+from classroom.models import Classroom
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 class StudentListGetApi(APIView):
+    # @method_decorator(cache_page = (60*60))
+    @cache_page(60*60)
     def get(self, request):
-        student = Student.objects.all()
+        student = Student.objects.select_related('user','class_enrolled').all() 
+        # student = Student.objects.all()
+        # student = Student.objects.prefetch_related('class_enrolled').filter(class_enrolled = 1)
         serializer = StudentSerializer(student, many= True)
         return Response(serializer.data)
     

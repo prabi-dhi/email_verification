@@ -16,6 +16,7 @@ class User(AbstractUser):
     username = models.CharField(max_length=255,unique=True)
     is_deleted = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default= False)
     
     class Meta:
         db_table = 'users'

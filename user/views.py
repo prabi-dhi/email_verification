@@ -14,6 +14,41 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 import uuid
 from .permissions import IsAdministration
+from rest_framework.pagination import PageNumberPagination
+from .paginations import CustomPagination
+
+class UserListApi(APIView):
+    def get(self, request):
+        user = User.objects.all().order_by('id')
+        paginator = CustomPagination()
+        result = paginator.paginate_queryset(user, request)
+        serializer = UserSerializer(result, many= True)
+        return paginator.get_paginated_response(serializer.data)
+        # serializer = UserSerializer(user, many=True)
+        # return Response(serializer.data)
+    
+class UserDetailGetApi(APIView):
+    def get(self, request, pk):
+        user= get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+class UserDetailUpdateApi(APIView):
+    permission_classes= [IsAdministration]
+    def post(self, request, pk):
+        user= get_object_or_404(User, pk=pk)
+        serializer = UserSerializer(user, data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserDetailDeleteApi(APIView):
+    permission_classes = [IsAdministration]
+    def delete(self, request, pk):
+        user= get_object_or_404(User, pk=pk)
+        user.delete()
+        return Response(status = status.HTTP_204_NO_CONTENT)
 
 class RegisterApi(APIView):
     def post(self, request):
@@ -30,7 +65,7 @@ class RegisterApi(APIView):
                 'message': 'User created !!. Please check email to verify.',
                 'user': { 'username': user.username, 'email': user.email, 'user_type': user.user_type,}
             }, status=status.HTTP_201_CREATED)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def send_verification_email(self, user, token):
@@ -46,7 +81,7 @@ class RegisterApi(APIView):
                 'user': user,
                 'verification_url': verification_url,
             }
-        )   
+        )
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message= message)
 
 class VerifyEmailApi(APIView):
@@ -57,12 +92,13 @@ class VerifyEmailApi(APIView):
                 return Response({'error': 'Verification link expired'}, status=status.HTTP_400_BAD_REQUEST)
             user = token_obj.user
             user.is_verified = True
+            user.is_active = True
             user.save()
             token_obj.delete()
             return Response({'message': 'Email successfully verified!'}, status=status.HTTP_200_OK)
         except VerificationToken.DoesNotExist:
             return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
 class RequestPasswordResetApi(APIView):
     def post(self, request):
         username = request.data.get('username')
@@ -78,7 +114,7 @@ class RequestPasswordResetApi(APIView):
         )
         self.send_password_reset_email(user, reset_token)
         return Response({"message": "Check email to reset password"}, status=status.HTTP_200_OK)
-        
+
     def send_password_reset_email(self, user, reset_token):
         reset_url = f'http://127.0.0.1:8000/reset-password/{reset_token.token}/'
         subject = 'Reset Your Password'
@@ -102,39 +138,9 @@ class ResetPasswordApi(APIView):
         new_password = request.data.get('new_password')
         if not new_password:
             return Response({"error": "New password is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         user = token_obj.user
         user.set_password(new_password)
         user.save()
         token_obj.delete()
         return Response({"message": "Password has been reset successfully!"}, status=status.HTTP_200_OK)
-
-
-# class UserListApi(APIView):
-#     def get(self, request):
-#         user = User.objects.all()
-#         serializer = UserSerializer(user, many=True)
-#         return Response(serializer.data)
-
-# class UserDetailGetApi(APIView):
-#     def get(self, request, pk):
-#         user= get_object_or_404(User, pk=pk)
-#         serializer = UserSerializer(user)
-#         return Response(serializer.data)
-
-# class UserDetailUpdateApi(APIView):
-#     permission_classes= [IsAdministration]
-#     def post(self, request, pk):
-#         user= get_object_or_404(User, pk=pk)
-#         serializer = UserSerializer(user, data = request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# class UserDetailDeleteApi(APIView):
-#     permission_classes = [IsAdministration]
-#     def delete(self, request, pk):
-#         user= get_object_or_404(User, pk=pk)
-#         user.delete()
-#         return Response(status = status.HTTP_204_NO_CONTENT)
