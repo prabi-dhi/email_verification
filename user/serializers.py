@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from .models import User
-# from django.contrib.auth.password_validation import validate_password
-# from django.core.exceptions import ValidationError
+# from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+# from rest_framework_simplejwt.views import TokenObtainPairView
+
+# class CustomTokenObtainPair Serializer
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
@@ -17,10 +19,3 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
-
-    # def validate_password(self, value):
-    #     try:
-    #         validate_password(value)
-    #     except ValidationError as e:
-    #         raise serializers.ValidationError(e.messages)
-    #     return value

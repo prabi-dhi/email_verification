@@ -10,17 +10,25 @@ from .permissions import IsAdministration
 from classroom.models import Classroom
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.utils import timezone
 
 class StudentListGetApi(APIView):
-    # @method_decorator(cache_page = (60*60))
-    @cache_page(60*60)
+    @method_decorator(cache_page(60*15))
+    # @cache_page(60*60)
     def get(self, request):
+        # start_time = timezone.now()
+
         student = Student.objects.select_related('user','class_enrolled').all() 
         # student = Student.objects.all()
         # student = Student.objects.prefetch_related('class_enrolled').filter(class_enrolled = 1)
         serializer = StudentSerializer(student, many= True)
+        # end_time = timezone.now()
+        # elapsed_time = end_time - start_time
+        # Time= elapsed_time.total_seconds()
+        # print(Time)
+
         return Response(serializer.data)
-    
+
 class StudentDetailGetApi(APIView):
     def get(self, request, pk):
         try:

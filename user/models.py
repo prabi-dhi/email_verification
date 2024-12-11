@@ -5,6 +5,7 @@ from django.utils import timezone
 import uuid
 from django.apps import apps
 # from student.models import Student
+import secrets
 
 class User(AbstractUser):
     class Types(models.TextChoices):
@@ -35,16 +36,27 @@ class User(AbstractUser):
 
 class VerificationToken(models.Model):
     user = models.ForeignKey(User, related_name='verification_tokens', on_delete=models.CASCADE, null= True)
-    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    # token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    token = models.CharField(max_length= 6, editable =False, unique = True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+
+    def generate_token(self):
+        characters= self.user.username+str(self.user.id)
+        return ''.join([secrets.choice(characters) for i in range (6)])
+        # return secrets.token_hex(3)
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token= self.generate_token()
+        super().save(*args, **kwargs)
 
     def is_expired(self):
         return timezone.now() > self.expires_at
 
-    def __str__(self):
-        # return f"{self.user.username}"
-        return {self.user.username}
+    # def __str__(self):
+    #     # return f"{self.user.username}"
+    #     return {self.user.username}
     
     class Meta:
         db_table = 'tokens'

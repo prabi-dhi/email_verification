@@ -29,14 +29,15 @@ class UserListApi(APIView):
     
 class UserDetailGetApi(APIView):
     def get(self, request, pk):
-        user= get_object_or_404(User, pk=pk)
+        user= User.objects.filter(pk=pk, is_deleted = False).last()
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
 class UserDetailUpdateApi(APIView):
     permission_classes= [IsAdministration]
     def post(self, request, pk):
-        user= get_object_or_404(User, pk=pk)
+        user= User.objects.filter(pk=pk, is_deleted= False).last()
+        # user= get_object_or_404(User, pk=pk)
         serializer = UserSerializer(user, data = request.data)
         if serializer.is_valid():
             serializer.save()
@@ -46,8 +47,9 @@ class UserDetailUpdateApi(APIView):
 class UserDetailDeleteApi(APIView):
     permission_classes = [IsAdministration]
     def delete(self, request, pk):
-        user= get_object_or_404(User, pk=pk)
-        user.delete()
+        user= User.objects.filter(pk=pk, is_deleted= False).last()
+        user.is_deleted = True
+        user.save()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
 class RegisterApi(APIView):
@@ -69,10 +71,9 @@ class RegisterApi(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def send_verification_email(self, user, token):
-        token_str = str(token.token)
         # current_site = get_current_site(self.request)
         # verification_url = f'http://{current_site.domain}/verify/{token_str}/'
-        verification_url = f'http://127.0.0.1:8000/verify/{token_str}/'
+        verification_url = f'http://127.0.0.1:8000/verify/{token.token}/'
 
         subject = 'Verify Your Account'
         message = render_to_string(
@@ -104,14 +105,15 @@ class RequestPasswordResetApi(APIView):
         username = request.data.get('username')
         try:
             user = User.objects.get(username=username)
-            print(user)
         except User.DoesNotExist:
-            return Response({"error": "User with this email does not exist."}, status=status.HTTP_404_NOT_FOUND)
-        token = uuid.uuid4()
-        # token = default_token_generator.make_token(user)
-        reset_token = VerificationToken.objects.create(user=user, token=token,
-            expires_at=timezone.now() + timedelta(hours=1)
-        )
+            return Response({"error": "User with this username does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        reset_token = VerificationToken.objects.create(
+                user=user,
+                expires_at=timezone.now() + timedelta(hours=1)
+            )        # token = default_token_generator.make_token(user)
+        # reset_token = VerificationToken.objects.create(user=user, token=token,
+        #     expires_at=timezone.now() + timedelta(hours=1)
+        # )
         self.send_password_reset_email(user, reset_token)
         return Response({"message": "Check email to reset password"}, status=status.HTTP_200_OK)
 
