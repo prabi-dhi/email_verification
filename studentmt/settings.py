@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'student',
     'teacher',
     'classroom',
+    'subject',
+    'grade',
     'rest_framework',
     'rest_framework_simplejwt',
 ]
@@ -137,7 +139,9 @@ REST_FRAMEWORK = {
     #     'DEFAULT_AUTHENTICATION_CLASSES': [
     #     'apps.management.authentication.JWTAuthentication',
     # ],
-    'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
+    # 'DEFAULT_PAGINATION_CLASS':'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    
     'PAGE_SIZE': 2,
 }
 

@@ -14,7 +14,6 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 import uuid
 from .permissions import IsAdministration
-from rest_framework.pagination import PageNumberPagination
 from .paginations import CustomPagination
 
 class UserListApi(APIView):
