@@ -16,13 +16,18 @@ from .paginations import CustomPagination
 class StudentListGetApi(APIView):
     def get(self, request):
         student = Student.objects.select_related('user','class_enrolled').all() 
+        serializer= StudentSerializer(student, many= True)
+        return Response(serializer.data)
+
         # student = Student.objects.all()
         # student = Student.objects.prefetch_related('class_enrolled').filter(class_enrolled = 1)
-        paginator = CustomPagination()
-        result = paginator.paginate_queryset(student, request)
-        serializer = StudentSerializer(result, many= True)
-        return paginator.get_paginated_response(serializer.data)
-        # return Response(serializer.data)
+
+        
+        # paginator = CustomPagination()
+        # result = paginator.paginate_queryset(student, request)
+        # serializer = StudentSerializer(result, many= True)
+        # return paginator.get_paginated_response(serializer.data)
+
 
 class StudentDetailGetApi(APIView):
     def get(self, request, pk):
