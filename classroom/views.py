@@ -16,7 +16,9 @@ class ClassroomListGetApi(APIView):
 class ClassroomAddApi(APIView):
     permission_classes=[IsAuthenticatedAdministration]
     def post(self, request):
-        serializer = ClassroomSerializer(data = request.data)
+        data = request.data
+        data.update({"created_by": request.user.id})
+        serializer = ClassroomSerializer(data = data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
