@@ -15,7 +15,7 @@ from .paginations import CustomPagination
 
 class StudentListGetApi(APIView):
     def get(self, request):
-        student = Student.objects.select_related('user','class_enrolled').all() 
+        student = Student.objects.select_related('user','class_enrolled').filter(is_deleted =False) 
         serializer= StudentSerializer(student, many= True)
         return Response(serializer.data)
 
